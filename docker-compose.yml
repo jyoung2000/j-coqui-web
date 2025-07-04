@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  coqui-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: j-coqui-web
+    ports:
+      - "2201:2201"
+    volumes:
+      - ./models:/app/models
+      - ./output:/app/output
+      - ./voice_samples:/app/voice_samples
+      - ./user_data:/app/user_data
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+      - TTS_MODEL_PATH=/app/models
+      - OUTPUT_PATH=/app/output
+      - VOICE_SAMPLES_PATH=/app/voice_samples
+      - GRADIO_SERVER_NAME=0.0.0.0
+      - GRADIO_SERVER_PORT=2201
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    networks:
+      - coqui-network
+
+networks:
+  coqui-network:
+    driver: bridge
