@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  coqui-tts:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: j-coqui-web
+    ports:
+      - "2201:2201"
+    volumes:
+      # Persistent storage for models
+      - models_data:/app/models
+      # Persistent storage for generated audio
+      - outputs_data:/app/outputs
+      # Persistent storage for cloned voices
+      - voices_data:/app/voices
+      # Temporary upload storage
+      - temp_data:/app/temp
+    environment:
+      - PYTHONUNBUFFERED=1
+      - TTS_HOME=/app/models
+      - CUDA_VISIBLE_DEVICES=all
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2201/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    # Uncomment the following lines if you have NVIDIA GPU support
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+volumes:
+  models_data:
+    driver: local
+  outputs_data:
+    driver: local
+  voices_data:
+    driver: local
+  temp_data:
+    driver: local
+
+networks:
+  default:
+    name: coqui-tts-network
